@@ -10,12 +10,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 
 @Component
@@ -38,13 +40,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     final String authorizationHeader = request.getHeader("Authorization");
 
-    String username = null;
+    Integer userId = null;
     String jwt = null;
+    String role = null;
 
     if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
       jwt = authorizationHeader.substring(7);
       try {
-        username = jwtUtil.extractUsername(jwt);
+        userId = jwtUtil.extractUserId(jwt);  // Extract the user ID from the JWT
+        role = jwtUtil.extractRole(jwt);
       } catch (JwtException e) {
         logger.error("JWT token is invalid", e);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -53,11 +57,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
     }
 
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      Optional<User> optionalUser = userService.findByUsername(username);
-      if (optionalUser.isPresent() && jwtUtil.validateToken(jwt, username)) {
+    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+      Optional<User> optionalUser = userService.findById(userId);
+      if (optionalUser.isPresent() && jwtUtil.validateToken(jwt, userId)) {
         User user = optionalUser.get();
-        var authToken = new UsernamePasswordAuthenticationToken(user, null, null);
+        var authToken = new UsernamePasswordAuthenticationToken(
+            user,
+            null,
+            Collections.singletonList(new SimpleGrantedAuthority(role))
+        );
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authToken);
       }
@@ -65,4 +73,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     filterChain.doFilter(request, response);
   }
+
+
 }

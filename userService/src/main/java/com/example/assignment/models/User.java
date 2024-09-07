@@ -31,8 +31,7 @@ public class User {
   private String email;
 
   @NotBlank(message = "Password cannot be empty")
-  @JsonIgnore
   private String password;
 
-  private String roles;
+  private String role;
 }

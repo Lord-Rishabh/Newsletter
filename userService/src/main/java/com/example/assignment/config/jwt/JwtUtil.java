@@ -13,10 +13,10 @@ import java.util.function.Function;
 public class JwtUtil {
 
   @Value("${jwt.secret}")
-  private String secret ;
+  private String secret;
 
-  public String extractUsername(String token) {
-    return extractClaim(token, Claims::getSubject);
+  public Integer extractUserId(String token) {
+    return Integer.parseInt(extractClaim(token, Claims::getSubject));
   }
 
   public Date extractExpiration(String token) {
@@ -36,22 +36,26 @@ public class JwtUtil {
     return extractExpiration(token).before(new Date());
   }
 
-  public String generateToken(String username) {
+  public String generateToken(Integer userId, String role) {
     try {
-       return Jwts.builder()
-          .setSubject(username)
+      return Jwts.builder()
+          .setSubject(userId.toString())
+          .claim("role", role)
           .setIssuedAt(new Date(System.currentTimeMillis()))
           .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-          .signWith(SignatureAlgorithm.HS256,secret)
+          .signWith(SignatureAlgorithm.HS256, secret)
           .compact();
-    }
-    catch (Exception e) {
-      return "Error : " + e.getMessage();
+    } catch (Exception e) {
+      throw new RuntimeException("Error generating token: " + e.getMessage());
     }
   }
 
-  public Boolean validateToken(String token, String username) {
-    final String extractedUsername = extractUsername(token);
-    return (extractedUsername.equals(username) && !isTokenExpired(token));
+  public Boolean validateToken(String token, Integer userId) {
+    final Integer extractedUserId = extractUserId(token);
+    return (extractedUserId.equals(userId) && !isTokenExpired(token));
+  }
+
+  public String extractRole(String token) {
+    return (String) extractClaim(token, claims -> claims.get("role"));
   }
 }

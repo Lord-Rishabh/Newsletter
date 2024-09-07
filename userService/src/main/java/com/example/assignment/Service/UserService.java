@@ -1,12 +1,16 @@
 package com.example.assignment.Service;
 
 import com.example.assignment.models.User;
+import com.example.assignment.models.UserDTO;
 import com.example.assignment.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class UserService {
@@ -22,9 +26,9 @@ public class UserService {
     this.passwordEncoder = passwordEncoder;
   }
 
-  public User registerUser (User user) {
+  public void registerUser (User user) {
     user.setPassword(passwordEncoder.encode(user.getPassword()));
-    return userRepository.save(user);
+    userRepository.save(user);
   }
 
   public Optional<User> findByEmail(String email) {
@@ -35,27 +39,23 @@ public class UserService {
     return userRepository.findByUsername(username);
   }
 
+  public Optional<User> findById(Integer id) {
+    return userRepository.findById(id);
+  }
+
+  public UserDTO convertToDTO(User user) {
+    UserDTO userDTO = new UserDTO();
+    userDTO.setId(user.getId());
+    userDTO.setName(user.getName());
+    userDTO.setUsername(user.getUsername());
+    userDTO.setEmail(user.getEmail());
+    userDTO.setRole(user.getRole());
+    return userDTO;
+  }
+
+  public List<UserDTO> getAllUsers() {
+    return StreamSupport.stream(userRepository.findAll().spliterator(), false)
+        .map(this::convertToDTO)
+        .collect(Collectors.toList());
+  }
 }
-
-
-//  @Autowired
-//  private PasswordEncoder passwordEncoder;
-//
-//  @Autowired
-//  private JwtUtil jwtUtil;
-//
-
-//
-//  public String login (String username, String password) throws Exception {
-//    Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
-//    if (userOptional.isPresent()) {
-//      User user = userOptional.get();
-//      if (passwordEncoder.matches(password, user.getPassword())) {
-//        return jwtUtil.generateToken(user.getEmail());
-//      } else {
-//        throw new Exception("Invalid credentials");
-//      }
-//    } else {
-//      throw new Exception("User not found");
-//    }
-//  }
