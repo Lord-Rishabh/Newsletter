@@ -23,10 +23,11 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
-  protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  protected SecurityFilterChain securityFilterChain (HttpSecurity http) throws Exception {
     return http.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(request -> request
-            .requestMatchers("/user/getAllUsers").authenticated()
+            .requestMatchers("/user/getAllUsers", "/user/getUserWithJwt").authenticated()
+            .requestMatchers("/user/deleteUserById/**").hasRole("ADMIN")
             .anyRequest().permitAll()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

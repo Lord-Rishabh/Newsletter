@@ -1,16 +1,17 @@
-package com.example.assignment.Service;
+package com.example.assignment.service;
 
 import com.example.assignment.models.User;
 import com.example.assignment.models.UserDTO;
+import com.example.assignment.models.UserMapper;
 import com.example.assignment.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class UserService {
@@ -44,18 +45,18 @@ public class UserService {
   }
 
   public UserDTO convertToDTO(User user) {
-    UserDTO userDTO = new UserDTO();
-    userDTO.setId(user.getId());
-    userDTO.setName(user.getName());
-    userDTO.setUsername(user.getUsername());
-    userDTO.setEmail(user.getEmail());
-    userDTO.setRole(user.getRole());
-    return userDTO;
+    return UserMapper.INSTANCE.userToUserDTO(user);
   }
 
   public List<UserDTO> getAllUsers() {
-    return StreamSupport.stream(userRepository.findAll().spliterator(), false)
-        .map(this::convertToDTO)
-        .collect(Collectors.toList());
+    List<UserDTO> users = new ArrayList<>();
+    for(User user : userRepository.findAll()) {
+      users.add(UserMapper.INSTANCE.userToUserDTO(user));
+    }
+    return users;
+  }
+
+  public void deleteUser(User user) {
+    userRepository.delete(user);
   }
 }

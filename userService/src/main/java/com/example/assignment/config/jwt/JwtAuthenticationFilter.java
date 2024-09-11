@@ -1,7 +1,7 @@
 package com.example.assignment.config.jwt;
 
-import com.example.assignment.Service.UserService;
 import com.example.assignment.models.User;
+import com.example.assignment.service.UserService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -36,7 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+  protected void doFilterInternal (HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   FilterChain filterChain)
       throws ServletException, IOException {
     final String authorizationHeader = request.getHeader("Authorization");
 
@@ -73,6 +75,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     filterChain.doFilter(request, response);
   }
-
-
 }
