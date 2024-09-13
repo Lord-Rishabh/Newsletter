@@ -94,7 +94,7 @@ public class UserController {
 
     final String authorizationHeader = request.getHeader("Authorization");
 
-    if (authorizationHeader == null && !authorizationHeader.startsWith("Bearer ")) {
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       return ResponseEntity.badRequest().body("Authorization header missing or invalid");
     }
 
