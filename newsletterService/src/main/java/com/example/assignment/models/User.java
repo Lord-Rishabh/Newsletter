@@ -3,7 +3,7 @@ package com.example.assignment.models;
 import lombok.Data;
 
 @Data
-public class UserDto {
+public class User {
 
   private Integer id;
 

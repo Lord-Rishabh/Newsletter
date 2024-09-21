@@ -1,13 +1,11 @@
 package com.example.assignment.services;
 
 import com.example.assignment.models.Newsletter;
-import com.example.assignment.models.UserDto;
+import com.example.assignment.models.User;
 import com.example.assignment.repository.NewsletterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,19 +35,15 @@ public class NewsletterService {
     newsletterRepository.deleteById(id);
   }
 
+
   public boolean checkAdminRole(String authorizationHeader) {
-    ResponseEntity<?> response = userServiceClient.getUserByJwt(authorizationHeader);
+    User user = userServiceClient.getUserByJwt(authorizationHeader);
 
-    if (response.getStatusCode().is2xxSuccessful()) {
-      Object responseBody = response.getBody();
-
-      if (responseBody instanceof LinkedHashMap) {
-        LinkedHashMap<String, Object> userMap = (LinkedHashMap<String, Object>) responseBody;
-
-        String role = (String) userMap.get("role");
-        return "ROLE_ADMIN".equals(role);
-      }
+    if (user != null) {
+      String role = user.getRole();
+      return "ROLE_ADMIN".equals(role);
     }
     return false;
   }
+
 }

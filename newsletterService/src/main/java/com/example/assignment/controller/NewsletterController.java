@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/newsletter")
@@ -23,7 +24,7 @@ public class NewsletterController {
       boolean isAdmin = newsletterService.checkAdminRole(authorizationHeader);
 
       if (!isAdmin) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Forbidden: Only admins can add newsletters");
+        return ResponseEntity.badRequest().body("Forbidden: Only admins can add newsletters");
       }
 
       newsletterService.addNewsletter(newsletter);
@@ -34,28 +35,24 @@ public class NewsletterController {
   }
 
   @GetMapping("/getAll")
-  public ResponseEntity<?> getAllNewsletters () {
+  public List<Newsletter> getAllNewsletters() {
     try {
-      List<Newsletter> newsletters = newsletterService.getAllNewsletters();
-      return ResponseEntity.ok(newsletters);
+      return newsletterService.getAllNewsletters();
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("Failed to retrieve newsletters: " + e.getMessage());
+      throw new RuntimeException("Failed to retrieve newsletters: " + e.getMessage(), e);
     }
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<?> getNewsletterById (@PathVariable Integer id) {
+  public Newsletter getNewsletterById (@PathVariable Integer id) {
     try {
       Newsletter newsletter = newsletterService.getNewsletterById(id);
-      if (newsletter != null) {
-        return ResponseEntity.ok(newsletter);
-      } else {
-        return ResponseEntity.notFound().build();
+      if (newsletter == null) {
+        throw new NoSuchElementException("Newsletter not found with id: " + id);
       }
+      return newsletter;
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("Failed to retrieve newsletter: " + e.getMessage());
+      throw new RuntimeException("Failed to retrieve newsletter: " + e.getMessage(), e);
     }
   }
 
@@ -72,7 +69,7 @@ public class NewsletterController {
       newsletterService.deleteNewsletter(id);
       return ResponseEntity.ok("Newsletter deleted successfully");
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+      return ResponseEntity.badRequest()
           .body("Failed to delete newsletter: " + e.getMessage());
     }
   }

@@ -12,10 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 
@@ -90,12 +87,12 @@ public class UserController {
   }
 
   @GetMapping("/getUserByJwt")
-  public ResponseEntity<?> getUserByJwtToken (HttpServletRequest request) {
+  public UserDTO getUserByJwtToken(HttpServletRequest request) {
 
     final String authorizationHeader = request.getHeader("Authorization");
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      return ResponseEntity.badRequest().body("Authorization header missing or invalid");
+      throw new IllegalArgumentException("Authorization header missing or invalid");
     }
 
     String jwt = authorizationHeader.substring(7);
@@ -103,10 +100,9 @@ public class UserController {
     Optional<User> user = userService.findById(userId);
 
     if (user.isPresent()) {
-      UserDTO userDTO = userService.convertToDTO(user.get());
-      return ResponseEntity.ok(userDTO);
+      return userService.convertToDTO(user.get());
     } else {
-      return ResponseEntity.badRequest().body("User not found with id: " + userId);
+      throw new NoSuchElementException("User not found with id: " + userId);
     }
   }
 
