@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface UserSubscriptionRepository extends CrudRepository<UserSubscription, Integer> {
   List<UserSubscription> findByUserId(Integer userId);
   Optional<UserSubscription> findById(Long id);
+  Optional<UserSubscription> findByUserIdAndNewsletterId(Integer userId, Integer newsletterId);
+
+  List<UserSubscription> findByNewsletterId(Integer newsletterId);
 }

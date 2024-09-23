@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserSubscriptionService {
@@ -24,9 +26,25 @@ public class UserSubscriptionService {
   @Autowired
   private NewsletterServiceClient newsletterServiceClient;
 
+  @Autowired
+  private EmailService emailService;
+
   public User getUser(String authorizationHeader) {
     try {
       User user = userServiceClient.getUserByJwt(authorizationHeader);
+      if (user != null) {
+        return user;
+      } else {
+        throw new Exception("User not found for the given authorization header.");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to retrieve user from user service", e);
+    }
+  }
+
+  public User getUserById(Integer userId) {
+    try {
+      User user = userServiceClient.getUserById(userId);
       if (user != null) {
         return user;
       } else {
@@ -59,8 +77,12 @@ public class UserSubscriptionService {
       throw new RuntimeException("Invalid Newsletter Id");
     }
 
-    System.out.println(user);
-    System.out.println(newsletter);
+    Optional<UserSubscription> existingSubscription = userSubscriptionRepository
+        .findByUserIdAndNewsletterId(user.getId(), newsletter.getId());
+
+    if (existingSubscription.isPresent()) {
+      throw new RuntimeException("UserSubscription already exists");
+    }
 
     LocalDateTime startDate = LocalDateTime.now();
     LocalDateTime endDate = startDate.plus(newsletter.getSubscriptionPeriod());
@@ -73,9 +95,30 @@ public class UserSubscriptionService {
         .isActive(true)
         .build();
 
-    System.out.println(userSubscription);
     userSubscriptionRepository.save(userSubscription);
-    System.out.println("Service" + userSubscription);
+  }
+
+  public List<Integer> getUsersSubscribedToNewsletter(Integer newsletterId) {
+    List<UserSubscription> subscriptions = userSubscriptionRepository.findByNewsletterId(newsletterId);
+
+    return subscriptions.stream()
+        .map(UserSubscription::getUserId)
+        .collect(Collectors.toList());
+  }
+
+  public void sendNewsletterToSubscribedUsers(Integer newsletterId,
+                                              String authorizationHeader) {
+    List<Integer> subscribedUsers = getUsersSubscribedToNewsletter(newsletterId);
+    Newsletter newsletter = getNewsletter(newsletterId);
+    String subject = "Newsletter: " + newsletter.getTitle();
+    String emailContent = "Dear Subscriber, \n\n" +
+        "Here is the latest edition of the newsletter: " + newsletter.getDescription() + "\n\n" +
+        "Best regards,\nNewsletter Team";
+
+    for (Integer userId : subscribedUsers) {
+      User user = getUserById(userId);
+      emailService.sendNewsletterEmail(user.getEmail(), subject, emailContent);
+    }
   }
 
   public List<UserSubscription> getAllSubscriptionsForUser(String authorizationHeader) {

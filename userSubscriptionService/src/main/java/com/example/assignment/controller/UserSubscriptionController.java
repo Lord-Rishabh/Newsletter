@@ -1,5 +1,6 @@
 package com.example.assignment.controller;
 
+import com.example.assignment.models.Newsletter;
 import com.example.assignment.models.UserSubscription;
 import com.example.assignment.services.UserSubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,14 @@ public class UserSubscriptionController {
 
     userSubscriptionService.renewSubscription(authorizationHeader, subscriptionId);
     return ResponseEntity.ok("Subscription renewed successfully!");
+  }
+
+  @PostMapping("/send/{newsletterId}")
+  public String sendNewsletterToSubscribers(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable Integer newsletterId) {
+    userSubscriptionService.sendNewsletterToSubscribedUsers(newsletterId, authorizationHeader);
+    return "Newsletter sent to all subscribed users!";
   }
 }
 
