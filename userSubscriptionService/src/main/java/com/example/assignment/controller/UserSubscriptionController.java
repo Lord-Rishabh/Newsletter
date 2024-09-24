@@ -2,6 +2,7 @@ package com.example.assignment.controller;
 
 import com.example.assignment.models.Newsletter;
 import com.example.assignment.models.UserSubscription;
+import com.example.assignment.services.EmailService;
 import com.example.assignment.services.UserSubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ public class UserSubscriptionController {
 
   @Autowired
   private UserSubscriptionService userSubscriptionService;
+
+  @Autowired
+  private EmailService emailService;
 
   @PostMapping("/subscribe/{newsletterId}")
   public ResponseEntity<String> subscribeToNewsletter(
@@ -46,7 +50,7 @@ public class UserSubscriptionController {
   public String sendNewsletterToSubscribers(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Integer newsletterId) {
-    userSubscriptionService.sendNewsletterToSubscribedUsers(newsletterId, authorizationHeader);
+    emailService.sendNewsletterToSubscribedUsers(newsletterId, authorizationHeader);
     return "Newsletter sent to all subscribed users!";
   }
 }

@@ -4,6 +4,8 @@ import com.example.assignment.models.Newsletter;
 import com.example.assignment.models.User;
 import com.example.assignment.models.UserSubscription;
 import com.example.assignment.repository.UserSubscriptionRepository;
+import com.example.assignment.services.FeignClient.NewsletterService;
+import com.example.assignment.services.FeignClient.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,57 +23,15 @@ public class UserSubscriptionService {
   private UserSubscriptionRepository userSubscriptionRepository;
 
   @Autowired
-  private UserServiceClient userServiceClient;
+  private UserService userService;
 
   @Autowired
-  private NewsletterServiceClient newsletterServiceClient;
-
-  @Autowired
-  private EmailService emailService;
-
-  public User getUser(String authorizationHeader) {
-    try {
-      User user = userServiceClient.getUserByJwt(authorizationHeader);
-      if (user != null) {
-        return user;
-      } else {
-        throw new Exception("User not found for the given authorization header.");
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to retrieve user from user service", e);
-    }
-  }
-
-  public User getUserById(Integer userId) {
-    try {
-      User user = userServiceClient.getUserById(userId);
-      if (user != null) {
-        return user;
-      } else {
-        throw new Exception("User not found for the given authorization header.");
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to retrieve user from user service", e);
-    }
-  }
-
-  public Newsletter getNewsletter(Integer id) {
-    try {
-      Newsletter newsletter = newsletterServiceClient.getNewsletterById(id);
-      if (newsletter != null) {
-        return newsletter;
-      } else {
-        throw new Exception("Newsletter not found for the given id.");
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to retrieve the newsletter");
-    }
-  }
+  private NewsletterService newsletterService;
 
   @Transactional
   public void subscribe(String authorizationHeader, Integer newsletterId) {
-    User user = getUser(authorizationHeader);
-    Newsletter newsletter = getNewsletter(newsletterId);
+    User user = userService.getUserByJwt(authorizationHeader);
+    Newsletter newsletter = newsletterService.getNewsletter(newsletterId);
 
     if(newsletter == null) {
       throw new RuntimeException("Invalid Newsletter Id");
@@ -106,29 +66,14 @@ public class UserSubscriptionService {
         .collect(Collectors.toList());
   }
 
-  public void sendNewsletterToSubscribedUsers(Integer newsletterId,
-                                              String authorizationHeader) {
-    List<Integer> subscribedUsers = getUsersSubscribedToNewsletter(newsletterId);
-    Newsletter newsletter = getNewsletter(newsletterId);
-    String subject = "Newsletter: " + newsletter.getTitle();
-    String emailContent = "Dear Subscriber, \n\n" +
-        "Here is the latest edition of the newsletter: " + newsletter.getDescription() + "\n\n" +
-        "Best regards,\nNewsletter Team";
-
-    for (Integer userId : subscribedUsers) {
-      User user = getUserById(userId);
-      emailService.sendNewsletterEmail(user.getEmail(), subject, emailContent);
-    }
-  }
-
   public List<UserSubscription> getAllSubscriptionsForUser(String authorizationHeader) {
-    User user = getUser(authorizationHeader);
+    User user = userService.getUserByJwt(authorizationHeader);
     return userSubscriptionRepository.findByUserId(user.getId());
   }
 
   @Transactional
   public void renewSubscription(String authorizationHeader, Long subscriptionId) {
-    User user = getUser(authorizationHeader);
+    User user = userService.getUserByJwt(authorizationHeader);
     UserSubscription subscription = userSubscriptionRepository.findById(subscriptionId)
         .orElseThrow(() -> new RuntimeException("Subscription not found"));
 
@@ -139,7 +84,7 @@ public class UserSubscriptionService {
       throw new RuntimeException("Cannot renew an inactive subscription");
     }
 
-    Newsletter newsletter = getNewsletter(subscription.getNewsletterId());
+    Newsletter newsletter = newsletterService.getNewsletter(subscription.getNewsletterId());
     LocalDateTime newEndDate = subscription.
         getSubscriptionEndDate().
         atStartOfDay().

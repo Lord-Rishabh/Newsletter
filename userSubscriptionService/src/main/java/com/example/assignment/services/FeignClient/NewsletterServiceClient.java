@@ -1,4 +1,4 @@
-package com.example.assignment.services;
+package com.example.assignment.services.FeignClient;
 
 import com.example.assignment.models.Newsletter;
 import org.springframework.cloud.openfeign.FeignClient;
