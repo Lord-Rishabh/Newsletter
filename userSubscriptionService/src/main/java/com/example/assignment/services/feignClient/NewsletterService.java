@@ -1,4 +1,4 @@
-package com.example.assignment.services.FeignClient;
+package com.example.assignment.services.feignClient;
 
 import com.example.assignment.models.Newsletter;
 import org.springframework.beans.factory.annotation.Autowired;

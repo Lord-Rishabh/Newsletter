@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Data
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Entity
 @Table(name = "userSubscriptions")
-public class UserSubscription {
+public class UserSubscription implements Serializable {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

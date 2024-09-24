@@ -45,13 +45,5 @@ public class UserSubscriptionController {
     userSubscriptionService.renewSubscription(authorizationHeader, subscriptionId);
     return ResponseEntity.ok("Subscription renewed successfully!");
   }
-
-  @PostMapping("/send/{newsletterId}")
-  public String sendNewsletterToSubscribers(
-      @RequestHeader("Authorization") String authorizationHeader,
-      @PathVariable Integer newsletterId) {
-    emailService.sendNewsletterToSubscribedUsers(newsletterId, authorizationHeader);
-    return "Newsletter sent to all subscribed users!";
-  }
 }
 

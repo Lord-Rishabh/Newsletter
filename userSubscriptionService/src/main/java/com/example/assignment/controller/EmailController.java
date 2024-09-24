@@ -19,4 +19,3 @@ public class EmailController {
     return "Newsletter sent to all subscribed users!";
   }
 }
-

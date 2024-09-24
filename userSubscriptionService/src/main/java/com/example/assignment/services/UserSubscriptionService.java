@@ -4,9 +4,11 @@ import com.example.assignment.models.Newsletter;
 import com.example.assignment.models.User;
 import com.example.assignment.models.UserSubscription;
 import com.example.assignment.repository.UserSubscriptionRepository;
-import com.example.assignment.services.FeignClient.NewsletterService;
-import com.example.assignment.services.FeignClient.UserService;
+import com.example.assignment.services.feignClient.NewsletterService;
+import com.example.assignment.services.feignClient.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class UserSubscriptionService {
   private NewsletterService newsletterService;
 
   @Transactional
+  @CacheEvict(value = "userSubscriptionsCache", key = "#authorizationHeader")
   public void subscribe(String authorizationHeader, Integer newsletterId) {
     User user = userService.getUserByJwt(authorizationHeader);
     Newsletter newsletter = newsletterService.getNewsletter(newsletterId);
@@ -56,6 +59,7 @@ public class UserSubscriptionService {
         .build();
 
     userSubscriptionRepository.save(userSubscription);
+
   }
 
   public List<Integer> getUsersSubscribedToNewsletter(Integer newsletterId) {
@@ -66,6 +70,7 @@ public class UserSubscriptionService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable(value = "userSubscriptionsCache", key = "#authorizationHeader")
   public List<UserSubscription> getAllSubscriptionsForUser(String authorizationHeader) {
     User user = userService.getUserByJwt(authorizationHeader);
     return userSubscriptionRepository.findByUserId(user.getId());

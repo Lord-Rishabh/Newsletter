@@ -1,9 +1,11 @@
 package com.example.assignment.services;
 
+import com.example.assignment.models.EmailMessage;
 import com.example.assignment.models.Newsletter;
 import com.example.assignment.models.User;
-import com.example.assignment.services.FeignClient.NewsletterService;
-import com.example.assignment.services.FeignClient.UserService;
+import com.example.assignment.services.feignClient.NewsletterService;
+import com.example.assignment.services.feignClient.UserService;
+import com.example.assignment.services.kafka.EmailProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -25,6 +27,9 @@ public class EmailService {
 
   @Autowired
   private NewsletterService newsletterService;
+
+  @Autowired
+  private EmailProducer emailProducer;
 
   public void sendNewsletterEmail(String to, String subject, String text) {
     SimpleMailMessage message = new SimpleMailMessage();
@@ -50,7 +55,13 @@ public class EmailService {
 
     for (Integer userId : subscribedUsers) {
       User user = userService.getUserById(userId);
-      sendNewsletterEmail(user.getEmail(), subject, emailContent);
+      EmailMessage emailMessage = new EmailMessage();
+      emailMessage.setTo(user.getEmail());
+      emailMessage.setSubject(subject);
+      emailMessage.setBody(emailContent);
+
+      // Send email event to Kafka
+      emailProducer.sendEmailMessage(emailMessage);
     }
   }
 
