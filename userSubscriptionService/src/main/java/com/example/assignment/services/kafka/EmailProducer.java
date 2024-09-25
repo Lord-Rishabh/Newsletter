@@ -3,7 +3,6 @@ package com.example.assignment.services.kafka;
 import com.example.assignment.models.EmailMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 @Service

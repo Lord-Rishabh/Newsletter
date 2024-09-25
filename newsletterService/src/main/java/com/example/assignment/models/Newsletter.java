@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "newsletters")
-public class Newsletter {
+public class Newsletter implements Serializable {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

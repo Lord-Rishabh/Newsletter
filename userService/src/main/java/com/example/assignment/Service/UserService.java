@@ -5,6 +5,9 @@ import com.example.assignment.models.UserDTO;
 import com.example.assignment.models.UserMapper;
 import com.example.assignment.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +29,7 @@ public class UserService {
     this.passwordEncoder = passwordEncoder;
   }
 
-  public void registerUser (User user) {
+  public void registerUser(User user) {
     user.setPassword(passwordEncoder.encode(user.getPassword()));
     userRepository.save(user);
   }
@@ -39,6 +42,7 @@ public class UserService {
     return userRepository.findByUsername(username);
   }
 
+  @Cacheable(value = "users", key = "#id")
   public Optional<User> findById(Integer id) {
     return userRepository.findById(id);
   }
@@ -49,12 +53,13 @@ public class UserService {
 
   public List<UserDTO> getAllUsers() {
     List<UserDTO> users = new ArrayList<>();
-    for(User user : userRepository.findAll()) {
+    for (User user : userRepository.findAll()) {
       users.add(UserMapper.INSTANCE.userToUserDTO(user));
     }
     return users;
   }
 
+  @CacheEvict(value = "users", key = "#user.id")
   public void deleteUser(User user) {
     userRepository.delete(user);
   }
